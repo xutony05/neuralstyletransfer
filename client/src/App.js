@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from "@material-ui/core/Typography";
 import { DropzoneArea } from 'material-ui-dropzone'
 import "fontsource-roboto";
 import Grid from '@material-ui/core/Grid';
+import * as tf from '@tensorflow/tfjs'
 
 const useStyles = makeStyles((theme) => ({
   root: {
+    minHeight: "80vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -16,6 +18,53 @@ const useStyles = makeStyles((theme) => ({
 
 export default function App() {
   const classes = useStyles()
+  const [photo, setPhoto] = useState()
+  const [painting, setPainting] = useState()
+  const [finishedPhoto, setFinishedPhoto] = useState()
+
+  const handlePhotoDrop = (file) => {
+    setPhoto(file[0])
+  }
+
+  const handlePaintingDrop = (file) => {
+    setPainting(file[0])
+  }
+
+  useEffect(() => {
+    if (photo && painting) {
+      styleTransfer()
+    }
+  }, [photo, painting])
+
+  const styleTransfer = () => {
+    let photoTensor
+    let paintingTensor
+    console.log(typeof photo)
+    const im = new Image()
+    var fr = new FileReader();
+    fr.onload = function () {
+      im.src = fr.result;
+    }
+    console.log(photo)
+    fr.readAsDataURL(photo);
+    im.onload = () => {
+      photoTensor = tf.browser.fromPixels(im)
+      console.log(photoTensor)
+    }
+
+    const paintingIm = new Image()
+    var fr = new FileReader();
+    fr.onload = function () {
+      paintingIm.src = fr.result;
+    }
+    fr.readAsDataURL(paintingIm);
+    paintingIm.onload = () => {
+      paintingTensor = tf.browser.fromPixels(paintingIm)
+    }
+
+    console.log(photoTensor)
+  }
+
   return (
     <div className={classes.root}>
       <Grid container spacing={2}>
@@ -31,6 +80,7 @@ export default function App() {
             showPreviewsInDropzone={false}
             maxFileSize={5000000}
             filesLimit={1}
+            onChange={handlePhotoDrop}
           />
         </Grid>
         <Grid item xs={6}>
@@ -40,6 +90,7 @@ export default function App() {
             showPreviewsInDropzone={false}
             maxFileSize={5000000}
             filesLimit={1}
+            onChange={handlePaintingDrop}
           />
         </Grid>
       </Grid>
