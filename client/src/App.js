@@ -4,7 +4,8 @@ import Typography from "@material-ui/core/Typography";
 import { DropzoneArea } from 'material-ui-dropzone'
 import "fontsource-roboto";
 import Grid from '@material-ui/core/Grid';
-import * as tf from '@tensorflow/tfjs'
+import model from './tfjs_model/model.json'
+import * as tf from '@tensorflow/tfjs';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -21,49 +22,47 @@ export default function App() {
   const [photo, setPhoto] = useState()
   const [painting, setPainting] = useState()
   const [finishedPhoto, setFinishedPhoto] = useState()
+  const [m, setM] = useState()
 
   const handlePhotoDrop = (file) => {
-    setPhoto(file[0])
+    if (file[0]) {
+      const im = new Image()
+      var fr = new FileReader();
+      fr.onload = function () {
+        im.src = fr.result;
+      }
+      fr.readAsDataURL(file[0]);
+      im.onload = () => {
+        setPhoto(tf.browser.fromPixels(im))
+      }
+    }
   }
 
   const handlePaintingDrop = (file) => {
-    setPainting(file[0])
+    if (file[0]) {
+      const im = new Image()
+      var fr = new FileReader();
+      fr.onload = function () {
+        im.src = fr.result;
+      }
+      fr.readAsDataURL(file[0]);
+      im.onload = () => {
+        setPainting(tf.browser.fromPixels(im))
+      }
+    }
+  }
+
+  const runML = async () => {
+    const x = await tf.loadLayersModel(model)
+    setM(x)
   }
 
   useEffect(() => {
     if (photo && painting) {
-      styleTransfer()
+      runML()
+      console.log(photo, painting)
     }
   }, [photo, painting])
-
-  const styleTransfer = () => {
-    let photoTensor
-    let paintingTensor
-    console.log(typeof photo)
-    const im = new Image()
-    var fr = new FileReader();
-    fr.onload = function () {
-      im.src = fr.result;
-    }
-    console.log(photo)
-    fr.readAsDataURL(photo);
-    im.onload = () => {
-      photoTensor = tf.browser.fromPixels(im)
-      console.log(photoTensor)
-    }
-
-    const paintingIm = new Image()
-    var fr = new FileReader();
-    fr.onload = function () {
-      paintingIm.src = fr.result;
-    }
-    fr.readAsDataURL(paintingIm);
-    paintingIm.onload = () => {
-      paintingTensor = tf.browser.fromPixels(paintingIm)
-    }
-
-    console.log(photoTensor)
-  }
 
   return (
     <div className={classes.root}>
