@@ -4,8 +4,7 @@ import Typography from "@material-ui/core/Typography";
 import { DropzoneArea } from 'material-ui-dropzone'
 import "fontsource-roboto";
 import Grid from '@material-ui/core/Grid';
-import model from './tfjs_model/model.json'
-import * as tf from '@tensorflow/tfjs';
+import axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -22,45 +21,27 @@ export default function App() {
   const [photo, setPhoto] = useState()
   const [painting, setPainting] = useState()
   const [finishedPhoto, setFinishedPhoto] = useState()
-  const [m, setM] = useState()
 
   const handlePhotoDrop = (file) => {
     if (file[0]) {
-      const im = new Image()
-      var fr = new FileReader();
-      fr.onload = function () {
-        im.src = fr.result;
-      }
-      fr.readAsDataURL(file[0]);
-      im.onload = () => {
-        setPhoto(tf.browser.fromPixels(im))
-      }
+      setPhoto(file)
     }
   }
 
   const handlePaintingDrop = (file) => {
     if (file[0]) {
-      const im = new Image()
-      var fr = new FileReader();
-      fr.onload = function () {
-        im.src = fr.result;
-      }
-      fr.readAsDataURL(file[0]);
-      im.onload = () => {
-        setPainting(tf.browser.fromPixels(im))
-      }
+      setPainting(file)
     }
-  }
-
-  const runML = async () => {
-    const x = await tf.loadLayersModel(model)
-    setM(x)
   }
 
   useEffect(() => {
     if (photo && painting) {
-      runML()
-      console.log(photo, painting)
+      var fd = new FormData();
+      fd.append('photo', photo)
+      fd.append('painting', painting)
+      axios.post("http://127.0.0.1:5000/api/generateimage", fd)
+        .then(res => setFinishedPhoto(res.data))
+        .catch(err => console.log(err))
     }
   }, [photo, painting])
 
